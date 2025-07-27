@@ -1,12 +1,18 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Third Party Cookie Blocker",
   "description": "Blockiert Drittanbieter-Cookies standardmäßig mit Whitelist-Funktion",
   "version": "1.0",
-  "permissions": ["storage", "webRequest", "webRequestBlocking", "tabs"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "storage",
+    "webRequest",
+    "webRequestBlocking",
+    "tabs",
+    "<all_urls>"
+  ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"],
+    "persistent": false
   },
   "action": {
     "default_title": "Cookie Blocker",
