@@ -2,17 +2,23 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Cookie Blocker</title>
+<title>Cookie-Blocker</title>
 <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-<h1>Cookie Blocker</h1>
-<div id="currentDomain"></div>
-<button id="toggle"></button>
-<h2>Whitelist</h2>
-<ul id="list"></ul>
-<input type="text" id="domain" placeholder="example.com">
-<button id="add">Hinzufügen</button>
-<script src="popup.js"></script>
+  <h1>Cookie-Blocker</h1>
+
+  <div id="currentDomain"></div>
+  <button id="toggle"></button>
+
+  <h2>Whitelist</h2>
+  <ul id="list"></ul>
+
+  <div class="input-group">
+    <input type="text" id="domain" placeholder="example.com">
+    <button id="add">Hinzufügen</button>
+  </div>
+
+  <script src="popup.js"></script>
 </body>
 </html>
