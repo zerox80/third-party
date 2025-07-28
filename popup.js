@@ -3,6 +3,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const $ = id => document.getElementById(id);
 
+  function normalizeDomain(input) {
+    if (!input) return '';
+    const str = input.trim().toLowerCase();
+    try {
+      const url = new URL(str.includes('://') ? str : `http://${str}`);
+      return url.hostname;
+    } catch {
+      return str;
+    }
+  }
+
   function refreshWhitelistUI() {
     chrome.storage.local.get({ whitelist: [] }, ({ whitelist }) => {
       const ul = $('list');
@@ -14,7 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.createElement('button');
         btn.textContent = 'Entfernen';
         btn.addEventListener('click', () => {
-          chrome.storage.local.set({ whitelist: whitelist.filter(d => d !== domain) });
+          chrome.storage.local.get({ whitelist: [] }, ({ whitelist: list }) => {
+            const next = list.filter(d => d !== domain);
+            chrome.storage.local.set({ whitelist: next });
+          });
         });
 
         li.appendChild(btn);
@@ -31,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /** Aktuelle Tab-Domain ermitteln */
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
     if (!tabs[0]?.url) return;
-    currentDomain = new URL(tabs[0].url).hostname;
+    currentDomain = normalizeDomain(new URL(tabs[0].url).hostname);
     $('currentDomain').textContent = `Aktuelle Domain: ${currentDomain}`;
     refreshWhitelistUI();
   });
@@ -49,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /** Manuelle Eingabe */
   $('add').addEventListener('click', () => {
-    const domain = $('domain').value.trim();
+    const domain = normalizeDomain($('domain').value);
     if (!domain) return;
 
     chrome.storage.local.get({ whitelist: [] }, ({ whitelist }) => {

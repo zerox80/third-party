@@ -6,7 +6,7 @@ const RESPONSE_RULE_ID = 2;
 
 /** Erzeugt die beiden Kernregeln */
 function buildRules(whitelist = []) {
-  const excluded = whitelist;            // Domains, die wir durchlassen
+  const excluded = whitelist.map(d => d.toLowerCase()); // Domains, die wir durchlassen
   const baseCond = {
     domainType: 'thirdParty',
     excludedDomains: excluded,
