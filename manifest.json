@@ -1,16 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "Third Party Cookie Blocker",
-  "description": "Blockiert Drittanbieter-Cookies standardmäßig mit Whitelist-Funktion",
-  "version": "1.0",
-  "permissions": ["storage", "webRequest", "webRequestBlocking", "tabs"],
-  "host_permissions": ["<all_urls>"],
+  "name": "Third-Party Cookie Blocker",
+  "description": "Blockiert standardmäßig alle Drittanbieter-Cookies und bietet eine Whitelist für vertrauenswürdige Domains.",
+  "version": "1.1",
+  "permissions": [
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "tabs"
+  ],
+  "host_permissions": ["*://*/*"],
+  "action": {
+    "default_title": "Cookie-Blocker",
+    "default_popup": "popup.html"
+  },
   "background": {
     "service_worker": "background.js"
-  },
-  "action": {
-    "default_title": "Cookie Blocker",
-    "default_popup": "popup.html"
   },
   "icons": {
     "16": "icons/icon16.png",
