@@ -1,58 +1,62 @@
-let whitelist = [];
+/* Service-Worker: baut zur Laufzeit zwei DNR-Regeln auf
+   –  ID 1: löscht „Cookie“-Header in Anfragen
+   –  ID 2: löscht „Set-Cookie“-Header in Antworten      */
+const REQUEST_RULE_ID  = 1;
+const RESPONSE_RULE_ID = 2;
 
-chrome.storage.local.get({whitelist: []}, data => {
-  whitelist = data.whitelist;
-});
+/** Erzeugt die beiden Kernregeln */
+function buildRules(whitelist = []) {
+  const excluded = whitelist;            // Domains, die wir durchlassen
+  const baseCond = {
+    domainType: 'thirdParty',
+    excludedDomains: excluded,
+    resourceTypes: [
+      'sub_frame', 'script', 'xmlhttprequest',
+      'image', 'font', 'media', 'object',
+      'ping', 'other'
+    ]
+  };
 
+  return [
+    {
+      id: REQUEST_RULE_ID,
+      priority: 1,
+      action: {
+        type: 'modifyHeaders',
+        requestHeaders: [{ header: 'cookie', operation: 'remove' }]
+      },
+      condition: baseCond
+    },
+    {
+      id: RESPONSE_RULE_ID,
+      priority: 1,
+      action: {
+        type: 'modifyHeaders',
+        responseHeaders: [{ header: 'set-cookie', operation: 'remove' }]
+      },
+      condition: baseCond
+    }
+  ];
+}
+
+/** Setzt (bzw. ersetzt) die dynamischen Regeln */
+async function applyRules(whitelist) {
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: [REQUEST_RULE_ID, RESPONSE_RULE_ID],
+    addRules:      buildRules(whitelist)
+  });
+}
+
+/** Initialisieren */
+async function init() {
+  const { whitelist = [] } = await chrome.storage.local.get({ whitelist: [] });
+  await applyRules(whitelist);
+}
+init();
+
+/** Auf Änderungen der Whitelist reagieren */
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.whitelist) {
-    whitelist = changes.whitelist.newValue;
+    applyRules(changes.whitelist.newValue);
   }
 });
-
-function hostname(url) {
-  try {
-    return new URL(url).hostname;
-  } catch (e) {
-    return '';
-  }
-}
-
-function isThirdParty(details) {
-  if (!details.initiator) return false;
-  const initiatorHost = hostname(details.initiator);
-  const requestHost = hostname(details.url);
-  return initiatorHost && requestHost && initiatorHost !== requestHost;
-}
-
-function inWhitelist(host) {
-  return whitelist.some(domain => host === domain || host.endsWith('.' + domain));
-}
-
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  details => {
-    if (isThirdParty(details)) {
-      const host = hostname(details.url);
-      if (!inWhitelist(host)) {
-        const headers = details.requestHeaders.filter(h => h.name.toLowerCase() !== 'cookie');
-        return {requestHeaders: headers};
-      }
-    }
-  },
-  {urls: ['<all_urls>']},
-  ['blocking', 'requestHeaders', 'extraHeaders']
-);
-
-chrome.webRequest.onHeadersReceived.addListener(
-  details => {
-    if (isThirdParty(details)) {
-      const host = hostname(details.url);
-      if (!inWhitelist(host)) {
-        const headers = details.responseHeaders.filter(h => h.name.toLowerCase() !== 'set-cookie');
-        return {responseHeaders: headers};
-      }
-    }
-  },
-  {urls: ['<all_urls>']},
-  ['blocking', 'responseHeaders', 'extraHeaders']
-);
